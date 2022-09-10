@@ -8,10 +8,11 @@
 #
 
 library(shiny)
+library(tidyverse)
 
-world_plus_ts <- read_rds("../world_plus_ts.rds") 
+world_plus_ts <<- read_rds("../world_plus_ts.rds") 
 
-# Define UI for application that draws a histogram
+# Define the User Interface, with placeholders for plots, etc
 ui <- fluidPage(
 
     # Application title
@@ -25,7 +26,9 @@ ui <- fluidPage(
                         min = 1998,
                         max = 2007,
                         step = 1,
-                        value = 1998),
+                        value = 1998,
+                        sep="", 
+                        animate = animationOptions(interval = 1200)),
             selectInput("country", 
                         "Which Country?",
                         choices = unique(world_plus_ts$region),
@@ -41,13 +44,14 @@ ui <- fluidPage(
     )
 )
 
-# Define server logic required to draw a histogram
+# Define server logic to update the app whenever users interact with the UI
 server <- function(input, output) {
 
     output$map <- renderPlot({
+
       world_plus_ts |> 
         ggplot() +
-        geom_map( map = world,
+        geom_map( map = world_plus_ts,
                   aes(long, lat, 
                       map_id = region, 
                       fill = !! as.symbol(paste0("x", input$year)) ),
