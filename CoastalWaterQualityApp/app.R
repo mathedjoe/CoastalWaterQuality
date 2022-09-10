@@ -7,10 +7,14 @@
 #    http://shiny.rstudio.com/
 #
 
-library(shiny)
-library(tidyverse)
+# load required packages
+library(shiny) # client-server web applications with R
+library(tidyverse) # data wrangling and static plotting
+library(plotly) # interactive plotting
 
-world_plus_ts <<- read_rds("../world_plus_ts.rds") 
+# read pre-processed data, includes water quality and other global factors
+map_df <- read_rds("../world_plus_ts.rds") |> 
+  filter(!is.na(x1998))
 
 # Define the User Interface, with placeholders for plots, etc
 ui <- fluidPage(
@@ -31,14 +35,14 @@ ui <- fluidPage(
                         animate = animationOptions(interval = 1200)),
             selectInput("country", 
                         "Which Country?",
-                        choices = unique(world_plus_ts$region),
+                        choices = unique(map_df$Country),
                         selected = "Algeria")
             
         ),
 
         # Show a plot of the generated distribution
         mainPanel(
-           plotOutput("map"),
+           plotlyOutput("map"),
            plotOutput("timeseriesplot")
         )
     )
@@ -47,25 +51,46 @@ ui <- fluidPage(
 # Define server logic to update the app whenever users interact with the UI
 server <- function(input, output) {
 
-    output$map <- renderPlot({
-
-      world_plus_ts |> 
-        ggplot() +
-        geom_map( map = world_plus_ts,
-                  aes(long, lat, 
-                      map_id = region, 
-                      fill = !! as.symbol(paste0("x", input$year)) ),
-                  color = "#333333", size = 0.1
-        ) +
-        theme_void()
+    output$map <- renderPlotly({
+      req(input$year)
+      
+      country_click <- event_data(event='plotly_click')
+      this_year <- paste0("x", input$year)
+      if(! is.null(country_click)) {
+        country_clicked <- map_df$Country[country_click$pointNumber + 1]
+        updateSelectInput(inputId = "country", selected = country_clicked)
+      } 
+      
+      plot_geo(map_df) |> 
+        add_trace(
+          z = ~eval(parse(text = this_year)), 
+          color = ~eval(parse(text = this_year)), 
+          colors = 'Blues',
+          text = ~Country, 
+          locations = ~Code, 
+          marker = list(line = list(color = "#eeeeee", width = 0.5))
+        ) |> 
+        colorbar(title = this_year) |> 
+        layout(
+          title = '',
+          geo = list(
+            showframe = FALSE,
+            showcoastlines = FALSE,
+            landcolor = '#eeeeee',
+            countrycolor = '#cccccc',
+            showcountries = TRUE,
+            showland = TRUE,
+            projection = list(type = 'natural earth')
+          )
+        )
     })
     
     output$timeseriesplot <- renderPlot({
-      world_plus_ts |> 
-        filter(region == input$country) |> 
-        select(region, starts_with("x")) |> 
+      map_df |> 
+        filter(Country == input$country) |> 
+        select(Country, starts_with("x")) |> 
         slice(1) |> 
-        pivot_longer(-region, names_to = "year") |> 
+        pivot_longer(-Country, names_to = "year") |> 
         mutate(year = as.numeric(gsub("x", "", year))) |> 
         ggplot() +
         aes(x = year, y = value) + 
