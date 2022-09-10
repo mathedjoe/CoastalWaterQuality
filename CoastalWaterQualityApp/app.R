@@ -52,15 +52,17 @@ ui <- fluidPage(
 server <- function(input, output) {
 
     output$map <- renderPlotly({
-      req(input$year)
-      
-      country_click <- event_data(event='plotly_click')
+
       this_year <- paste0("x", input$year)
+      
+      # update the 'country' whenever a user clicks on the map
+      country_click <- event_data(event='plotly_click')
       if(! is.null(country_click)) {
         country_clicked <- map_df$Country[country_click$pointNumber + 1]
         updateSelectInput(inputId = "country", selected = country_clicked)
       } 
       
+      # interactive map (updates when year is changed)
       plot_geo(map_df) |> 
         add_trace(
           z = ~eval(parse(text = this_year)), 
@@ -85,6 +87,7 @@ server <- function(input, output) {
         )
     })
     
+    # static plot of water quality time series (updates when country changes)
     output$timeseriesplot <- renderPlot({
       map_df |> 
         filter(Country == input$country) |> 
