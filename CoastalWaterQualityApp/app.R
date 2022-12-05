@@ -13,8 +13,8 @@ library(tidyverse) # data wrangling and static plotting
 library(plotly) # interactive plotting
 
 # read pre-processed data, includes water quality and other global factors
-map_df <- read_rds("../world_plus_pop.rds") %>% 
-  filter(!is.na(waterquality)) %>% 
+map_df <- read_rds("../world_plus_pop_gdp.rds") %>% 
+  filter(!is.na(waterquality),!is.na(GDP)) %>% 
   arrange(Country,Year)
 
 # Define the User Interface, with placeholders for plots, etc
@@ -29,6 +29,9 @@ ui <- navbarPage("Algae Explorer",
                         margin-right: -15px;
                         padding-left: 15px;'})),
                         
+                  
+                          
+                          
                           fluidRow(
                             column(4, 
                                  
@@ -56,7 +59,7 @@ ui <- navbarPage("Algae Explorer",
                           fluidRow(
                             
                             column(11,
-                                   plotlyOutput("map", height = 800 ),
+                                   plotlyOutput("map", height = 500 ),
                             )),
                   ),
                         
@@ -74,7 +77,7 @@ ui <- navbarPage("Algae Explorer",
                                       choices = unique(map_df$Country),
                                      selected = "Albania" ),
                           
-                          selectInput("globalfactors","Which Global Factors?",c("PopTotal","PopFemale","PopMale"))),
+                          selectInput("globalfactors","Which Global Factors?",c("PopTotal","PopFemale","PopMale","GDP"))),
                          
                           mainPanel(
                        
@@ -228,10 +231,10 @@ server <- function(input, output) {
       #                       PopMale = PopMale)
  #   })
     
-    output$plot <- renderPlot({
-    
-        map_df |> 
-        filter(Country == input$countries2) |> 
+   output$plot <- renderPlot({
+   
+      map_df |> 
+       filter(Country == input$countries2) |> 
         ggplot() +
         aes(x = Year)+
         geom_line(aes(y = get(input$globalfactors)/10000), color = "skyblue2", size = 1.5) + 
@@ -244,12 +247,13 @@ server <- function(input, output) {
           name = "Chlorophyll A in ng/cc",
           expand = expansion(c(1.5,1.5)),
           
-          sec.axis = sec_axis(trans~.*10, name = "Population (in millions)"))+
-        theme_minimal()
-
       
+          sec.axis = sec_axis(trans~.*10, name = "Population (in Millions)"))+
+      theme_minimal()
+        
+        
     })
-    
+ 
 
 }
 
