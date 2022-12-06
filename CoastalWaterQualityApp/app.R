@@ -89,14 +89,20 @@ ui <- navbarPage(theme = shinytheme("cerulean"),
                                      selected = "Albania" ),
                           
                           selectInput("globalfactors","Which Global Factor?",c("PopTotal","PopFemale","PopMale","GDP"))),
-                      
-                   #   h1("Heyyyyy whats up"),
+                
                      
                          
                           mainPanel(
                             div( style = "border-style: solid; border-color: lightblue;",
-                                  plotOutput("plot",height = 600))
-                              
+                                  plotOutput("plot",height = 600)),
+                            
+                            tags$div(
+                              tags$span(style = "color: lightgreen;", "The Green Line Represents Water Quality")),
+                            
+                            tags$div(
+                              tags$span(style = "color: lightblue;", "The Blue Line Represents the Global Factor")),
+                          
+                              h6('*GDP is Per Capita')
                           
                       ))),
               
@@ -164,7 +170,7 @@ ui <- navbarPage(theme = shinytheme("cerulean"),
                                                      padding-left: 15px;'})),
                                      
                                   h4(tags$a(href="https://github.com/mathedjoe/CoastalWaterQuality", "Click here to Get the Code")),
-                                     h6("Currently Private")
+                                     
                                      ),
                             tabPanel("Here's What I Have to Say to New Math Students",
                                      
@@ -292,7 +298,7 @@ server <- function(input, output) {
           name = "Chlorophyll A in ng/cc",
           expand = expansion(c(1.5,1.5)),
           
-          sec.axis = sec_axis(trans~.*10, name = "Population (in Millions) / Dollars (in thousands)"))+
+          sec.axis = sec_axis(trans~.*10, name = "Population (in Millions) / Dollars (in thousands for GDP)"))+
       theme_minimal()
         
     })
