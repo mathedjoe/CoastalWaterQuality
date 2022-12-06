@@ -9,6 +9,7 @@
 
 # load required packages
 library(shiny) # client-server web applications with R
+library(shinythemes)
 library(tidyverse) # data wrangling and static plotting
 library(plotly) # interactive plotting
 
@@ -18,23 +19,23 @@ map_df <- read_rds("../world_plus_pop_gdp.rds") %>%
   arrange(Country,Year)
 
 # Define the User Interface, with placeholders for plots, etc
-ui <- navbarPage("Algae Explorer",
+ui <- navbarPage(theme = shinytheme("cerulean"),
+            title =" Algae Explorer",
                  
                  tabPanel("Water Quality Map",
                           
-                          # Application title
-                          titlePanel(h1("Coastal Water Quality, 1998-2007",
-                          style={'background-color: lightblue;
-                        margin-left: -15px;
-                        margin-right: -15px;
-                        padding-left: 15px;'})),
-                        
-                  
                           
+                          # Application title
+                          titlePanel(h1("Coastal Water Quality, 1998-2007", align = "center",
+                          style={'background-color: lightblue;
+                             margin-left: -15px;
+                              margin-right: -15px;
+                              padding-left: 15px;'})),
+                           
                           
                           fluidRow(
                             column(4, 
-                                 
+                                   div( style = "border-style: solid; border-color: lightblue;",
                                    sliderInput("year", 
                                                "Which year?",
                                                min = 1998,
@@ -47,27 +48,37 @@ ui <- navbarPage("Algae Explorer",
                                                "Which Country?",
                                                choices = unique(map_df$Country),
                                                selected = "Albania"),
-                            ),
+                            )),
                             
                             column(8,
-                                            plotOutput("timeseriesplot", height = 200) ) 
+                                   div( style = "border-style: hidden; border-color: lightblue;",
+                                        plotOutput("timeseriesplot", height = 200) ) )
                           ),
                
                           
+                      
+              fluidRow(
+                            h3("Interactive Water Quality Map", align = "center")),
                           
                           # Sidebar with a slider input for number of bins 
                           fluidRow(
                             
-                            column(11,
-                                   plotlyOutput("map", height = 500 ),
+                            column(12,
+                                   div( style = "border-style: solid; border-color: lightgreen;",
+                                   plotlyOutput("map", height = 500 ),)
                             )),
+            
                   ),
                         
-                           
-                          
                  
                  tabPanel("Global Factors",
                           
+                          titlePanel(h1("Coastal Water Quality vs. Global Factors, 1998-2007", align = "center",
+                                        style={'background-color: lightblue;
+                                              margin-left: -15px;
+                                             margin-right: -15px;
+                                              padding-left: 15px;'})),
+
                    sidebarLayout(
                            
                       sidebarPanel(
@@ -77,17 +88,27 @@ ui <- navbarPage("Algae Explorer",
                                       choices = unique(map_df$Country),
                                      selected = "Albania" ),
                           
-                          selectInput("globalfactors","Which Global Factors?",c("PopTotal","PopFemale","PopMale","GDP"))),
+                          selectInput("globalfactors","Which Global Factor?",c("PopTotal","PopFemale","PopMale","GDP"))),
+                      
+                   #   h1("Heyyyyy whats up"),
+                     
                          
                           mainPanel(
-                       
-                                  plotOutput("plot",height = 600)
+                            div( style = "border-style: solid; border-color: lightblue;",
+                                  plotOutput("plot",height = 600))
                               
                           
                       ))),
               
                  navbarMenu("More Info",
                             tabPanel("Summary",
+                                     
+                                     titlePanel(h1("Summary", align = "center",
+                                                   style={'background-color: lightblue;
+                                                        margin-left: -15px;
+                                                        margin-right: -15px;
+                                                       padding-left: 15px;'})),
+                                     
                                      h3("What is being Measured?"), 
                                      h4("Our water quality data is measured by using the mean amount of Chlorophyll A 
                                         in nanograms per cubic meter, per year, for every coastal country."),
@@ -116,6 +137,12 @@ ui <- navbarPage("Algae Explorer",
                               
                                      
                             tabPanel("Credits",
+                                     titlePanel(h1("Credits", align = "center",
+                                                   style={'background-color: lightblue;
+                                      margin-left: -15px;
+                                      margin-right: -15px;
+                                      padding-left: 15px;'})),
+                                     
                                      h3("Data Source"),
                                      h4(tags$a(href="https://sedac.ciesin.columbia.edu/data/collection/icwq", "Click here for original data")),
                                      h3("Other Important Links"),
@@ -129,10 +156,24 @@ ui <- navbarPage("Algae Explorer",
                                      h4(tags$a(href="Baltic Sea Eutrophication")),
                                      h4("This Shiny App was created by Kenna Foerg with help from Joe Champion")),
                             tabPanel("Get Code",
+                                     
+                                     titlePanel(h1("Get Code", align = "center",
+                                                   style={'background-color: lightblue;
+                                                    margin-left: -15px;
+                                                     margin-right: -15px;
+                                                     padding-left: 15px;'})),
+                                     
                                   h4(tags$a(href="https://github.com/mathedjoe/CoastalWaterQuality", "Click here to Get the Code")),
                                      h6("Currently Private")
                                      ),
                             tabPanel("Here's What I Have to Say to New Math Students",
+                                     
+                                     titlePanel(h1("Advice to New Math Students", align = "center",
+                                                   style={'background-color: lightblue;
+                                                     margin-left: -15px;
+                                                     margin-right: -15px;
+                                                     padding-left: 15px;'})),
+                                     
                                      h3("Advice For A Student Who Is Struggling to Understand 
                                         Connections Between Different Math Courses They Have Taken"),
                                      h4("The biggest thing that you can do is talk to your professors. Ask them what
@@ -231,7 +272,11 @@ server <- function(input, output) {
       #                       PopMale = PopMale)
  #   })
     
+   
+    
    output$plot <- renderPlot({
+     
+     this_gf <-input$globalfactors
    
       map_df |> 
        filter(Country == input$countries2) |> 
@@ -247,13 +292,10 @@ server <- function(input, output) {
           name = "Chlorophyll A in ng/cc",
           expand = expansion(c(1.5,1.5)),
           
-      
-          sec.axis = sec_axis(trans~.*10, name = "Population (in Millions)"))+
+          sec.axis = sec_axis(trans~.*10, name = "Population (in Millions) / Dollars (in thousands)"))+
       theme_minimal()
         
-        
     })
- 
 
 }
 
